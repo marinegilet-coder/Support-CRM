@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Support utilisateurs CRM — Suivi des demandes</title>
+
+<!-- ============================================================
+     FAVICON
+     - Version actuelle : 🪩 boule disco (mode fun)
+     - Alternative pro : décommenter le bloc ALT et commenter celui-ci
+     ============================================================ -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AA%A9%3C/text%3E%3C/svg%3E">
+
+<!-- ALT (favicon pro Artémis : 🎯 cible bleu marine) :
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AF%3C/text%3E%3C/svg%3E">
+-->
+
 <style>
   /* ============ CHARTE ARTÉMIS ============ */
   :root {
@@ -567,6 +579,28 @@
     50% { opacity: 0.3; }
   }
 
+  /* ============ BOUTON ACTION RAPIDE (Résolu) ============ */
+  .quick-action-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .quick-action-btn:hover {
+    background: rgba(46, 139, 87, 0.12);
+    border-color: var(--green);
+    transform: scale(1.1);
+  }
+  .quick-action-btn:disabled {
+    opacity: 0.4;
+    cursor: wait;
+    transform: none;
+  }
+
   /* ============ TOAST ============ */
   .toast {
     position: fixed;
@@ -793,7 +827,6 @@
           <option value="En cours">En cours</option>
           <option value="En attente dev">En attente dev</option>
           <option value="Résolu">Résolu</option>
-          <option value="Clos">Clos</option>
         </select>
         <select class="filter-select" id="filter-module" onchange="renderTable()">
           <option value="">Tous modules</option>
@@ -835,6 +868,7 @@
               <th onclick="sortBy('priorite')">Priorité</th>
               <th onclick="sortBy('statut')">Statut</th>
               <th>Délai</th>
+              <th style="text-align:center;">Action</th>
             </tr>
           </thead>
           <tbody id="tickets-tbody"></tbody>
@@ -975,7 +1009,7 @@
       <p style="margin-bottom: 8px;"><strong>Vagues :</strong> BÊTA, V1, V2, V3, V4, V5</p>
       <p style="margin-bottom: 8px;"><strong>Modules :</strong> albR, Bewai, Cifacil, Transverse</p>
       <p style="margin-bottom: 8px;"><strong>Types :</strong> Bug, Question, Évolution, Accès, Donnée</p>
-      <p style="margin-bottom: 8px;"><strong>Statuts :</strong> Nouveau → En cours → En attente dev → Résolu → Clos</p>
+      <p style="margin-bottom: 8px;"><strong>Statuts :</strong> Nouveau → En cours → En attente dev → Résolu</p>
       <p style="margin-bottom: 8px;"><strong>Priorités :</strong> Bloquant 🔴, Gênant 🟠, Mineur 🟢</p>
       <p class="text-small" style="margin-top: 10px;">Pour modifier ces référentiels, contacter Marine.</p>
     </div>
@@ -1073,7 +1107,6 @@
             <option value="En cours">En cours</option>
             <option value="En attente dev">En attente dev</option>
             <option value="Résolu">Résolu</option>
-            <option value="Clos">Clos</option>
           </select>
         </div>
 
@@ -1101,7 +1134,7 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeTicketModal()">Annuler</button>
       <button class="btn btn-secondary" onclick="deleteCurrentTicket()" id="btn-delete" style="display:none; background:#FFE5E6; color:var(--red);">🗑️ Supprimer</button>
-      <button class="btn btn-primary" onclick="saveTicket()">💾 Enregistrer</button>
+      <button class="btn btn-primary" onclick="saveTicket()" id="btn-save">💾 Enregistrer</button>
     </div>
   </div>
 </div>
@@ -1130,7 +1163,8 @@ let state = {
   sortField: 'dateCreation',
   sortAsc: false,
   currentEditId: null,
-  isSyncing: false
+  isSyncing: false,
+  isSaving: false  // Verrou anti-doublon sur saveTicket et resolveTicketQuick
 };
 
 const REGIONS = ['IDF', 'Nord', 'Bretagne', 'Centre Loire', 'Sud-Est', 'Sud-Ouest'];
@@ -1350,6 +1384,10 @@ function updatePriorityDefault() {
 }
 
 async function saveTicket() {
+  // ============ VERROU ANTI-DOUBLON ============
+  // Si une sauvegarde est déjà en cours, on ignore le second clic
+  if (state.isSaving) return;
+
   const courtier = document.getElementById('f-courtier').value.trim();
   const type = document.getElementById('f-type').value;
   const module = document.getElementById('f-module').value;
@@ -1361,9 +1399,20 @@ async function saveTicket() {
     return;
   }
 
+  // Active le verrou + change l'apparence du bouton
+  state.isSaving = true;
+  const btnSave = document.getElementById('btn-save');
+  const btnDelete = document.getElementById('btn-delete');
+  const btnSaveOriginalText = btnSave.textContent;
+  btnSave.disabled = true;
+  btnSave.textContent = '⏳ Enregistrement...';
+  btnSave.style.opacity = '0.6';
+  btnSave.style.cursor = 'wait';
+  if (btnDelete) btnDelete.disabled = true;
+
   const now = new Date().toISOString();
   const statut = document.getElementById('f-statut').value;
-  const isClosing = (statut === 'Résolu' || statut === 'Clos');
+  const isClosing = (statut === 'Résolu');
 
   const ticketData = {
     courtier,
@@ -1406,6 +1455,16 @@ async function saveTicket() {
     ticketData.dateCloture = isClosing ? now : null;
   }
 
+  // Helper pour libérer le verrou (à appeler dans tous les cas de sortie)
+  const releaseLock = () => {
+    state.isSaving = false;
+    btnSave.disabled = false;
+    btnSave.textContent = btnSaveOriginalText;
+    btnSave.style.opacity = '';
+    btnSave.style.cursor = '';
+    if (btnDelete) btnDelete.disabled = false;
+  };
+
   // Sauvegarde backend si disponible
   if (BACKEND_ENABLED) {
     updateSyncIndicator('syncing', 'Sauvegarde...');
@@ -1416,7 +1475,8 @@ async function saveTicket() {
     } catch (err) {
       updateSyncIndicator('error', '🔴 Erreur');
       showToast('Erreur de sauvegarde : ' + err.message, 'error');
-      return; // On annule la modification locale si le backend a échoué
+      releaseLock(); // Libère le verrou avant de sortir
+      return;
     }
   }
 
@@ -1436,6 +1496,7 @@ async function saveTicket() {
   closeTicketModal();
   renderTable();
   renderDashboard();
+  releaseLock(); // Libère le verrou en fin de traitement normal
 }
 
 async function deleteCurrentTicket() {
@@ -1463,6 +1524,60 @@ async function deleteCurrentTicket() {
   renderTable();
   renderDashboard();
   showToast('Ticket supprimé', 'success');
+}
+
+// =====================================================
+// RACCOURCI : passe un ticket en "Résolu" en 1 clic
+// Appelé depuis le bouton ✅ dans la table
+// =====================================================
+async function resolveTicketQuick(ticketId) {
+  // Verrou anti-doublon (réutilise state.isSaving)
+  if (state.isSaving) return;
+
+  const idx = state.tickets.findIndex(t => t.id === ticketId);
+  if (idx < 0) {
+    showToast('Ticket introuvable', 'error');
+    return;
+  }
+
+  const ticket = state.tickets[idx];
+  if (ticket.statut === 'Résolu') return; // Déjà résolu, rien à faire
+
+  state.isSaving = true;
+
+  // Désactive visuellement tous les boutons quick-action pendant la sauvegarde
+  document.querySelectorAll('.quick-action-btn').forEach(b => b.disabled = true);
+
+  const now = new Date().toISOString();
+  const updatedTicket = {
+    ...ticket,
+    statut: 'Résolu',
+    dateCloture: ticket.dateCloture || now,
+    dateMaj: now
+  };
+
+  // Sauvegarde backend
+  if (BACKEND_ENABLED) {
+    updateSyncIndicator('syncing', 'Résolution...');
+    try {
+      await callBackend('update', updatedTicket);
+      updateSyncIndicator('ok', '🟢 Connecté');
+    } catch (err) {
+      updateSyncIndicator('error', '🔴 Erreur');
+      showToast('Erreur de résolution : ' + err.message, 'error');
+      state.isSaving = false;
+      document.querySelectorAll('.quick-action-btn').forEach(b => b.disabled = false);
+      return;
+    }
+  }
+
+  // Mise à jour locale
+  state.tickets[idx] = updatedTicket;
+  saveLocalCache();
+  renderTable();
+  renderDashboard();
+  showToast('Ticket #' + ticket.id + ' marqué comme Résolu', 'success');
+  state.isSaving = false;
 }
 
 // ============ TABLE ============
@@ -1513,7 +1628,7 @@ function renderTable() {
 
   const tbody = document.getElementById('tickets-tbody');
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="11" style="padding: 40px; text-align: center; color: var(--gray-500);">
+    tbody.innerHTML = `<tr><td colspan="12" style="padding: 40px; text-align: center; color: var(--gray-500);">
       ${state.tickets.length === 0 ? '📋 Aucun ticket pour le moment. Cliquer sur <strong>＋ Nouveau ticket</strong> pour démarrer.' : '🔍 Aucun ticket ne correspond aux filtres.'}
     </td></tr>`;
     return;
@@ -1534,8 +1649,19 @@ function renderTable() {
       <td>${priorityBadge(t.priorite)}</td>
       <td>${statusPill(t.statut)}</td>
       <td>${delai}</td>
+      <td style="text-align:center;">${quickActionButton(t)}</td>
     </tr>`;
   }).join('');
+}
+
+// Bouton de raccourci dans la colonne Action
+// Affiche ✅ pour passer rapidement en Résolu (caché si déjà résolu)
+function quickActionButton(t) {
+  if (t.statut === 'Résolu') {
+    return '<span style="color: var(--green); font-size: 16px;" title="Déjà résolu">✓</span>';
+  }
+  // L'event.stopPropagation empêche d'ouvrir le modal en cliquant sur l'icône
+  return `<button class="quick-action-btn" onclick="event.stopPropagation(); resolveTicketQuick('${String(t.id).replace(/'/g, "\\'")}')" title="Marquer comme Résolu">✅</button>`;
 }
 
 function computeDelai(t) {
@@ -1570,7 +1696,7 @@ function priorityBadge(p) {
   return `<span class="badge ${cls[p] || ''}">${icon[p] || ''} ${p}</span>`;
 }
 function statusPill(s) {
-  const cls = { 'Nouveau': 'status-nouveau', 'En cours': 'status-encours', 'En attente dev': 'status-jira', 'Résolu': 'status-resolu', 'Clos': 'status-clos' };
+  const cls = { 'Nouveau': 'status-nouveau', 'En cours': 'status-encours', 'En attente dev': 'status-jira', 'Résolu': 'status-resolu' };
   return `<span class="status-pill ${cls[s] || ''}">${s}</span>`;
 }
 
@@ -1590,10 +1716,10 @@ function renderDashboard() {
 
   // KPI 3 : résolus 30j
   const d30 = new Date(now); d30.setDate(d30.getDate() - 30);
-  const resolved30 = t.filter(x => (x.statut === 'Résolu' || x.statut === 'Clos') && x.dateCloture && new Date(x.dateCloture) >= d30);
+  const resolved30 = t.filter(x => x.statut === 'Résolu' && x.dateCloture && new Date(x.dateCloture) >= d30);
   document.getElementById('kpi-resolved').textContent = resolved30.length;
   const d7 = new Date(now); d7.setDate(d7.getDate() - 7);
-  const resolved7 = t.filter(x => (x.statut === 'Résolu' || x.statut === 'Clos') && x.dateCloture && new Date(x.dateCloture) >= d7);
+  const resolved7 = t.filter(x => x.statut === 'Résolu' && x.dateCloture && new Date(x.dateCloture) >= d7);
   document.getElementById('kpi-resolved-sub').textContent = resolved7.length + ' sur 7j';
 
   // KPI 4 : délai moyen
@@ -1674,12 +1800,12 @@ function renderDashboard() {
     </div>`).join('');
 
   // Statut
-  const statutOrder = ['Nouveau', 'En cours', 'En attente dev', 'Résolu', 'Clos'];
+  const statutOrder = ['Nouveau', 'En cours', 'En attente dev', 'Résolu'];
   const statutCount = {};
   statutOrder.forEach(s => statutCount[s] = 0);
   t.forEach(x => { if (x.statut) statutCount[x.statut] = (statutCount[x.statut] || 0) + 1; });
   const statutMax = Math.max(...Object.values(statutCount), 1);
-  const statutColors = { 'Nouveau': 'red', 'En cours': 'orange', 'En attente dev': '', 'Résolu': 'green', 'Clos': 'light' };
+  const statutColors = { 'Nouveau': 'red', 'En cours': 'orange', 'En attente dev': '', 'Résolu': 'green' };
   document.getElementById('chart-status').innerHTML = statutOrder.map(s => `
     <div class="bar-item">
       <div class="bar-label"><span>${s}</span><span><strong>${statutCount[s]}</strong></span></div>
@@ -1827,7 +1953,7 @@ function loadDemoData() {
     const created = new Date(now);
     created.setDate(created.getDate() - daysAgo);
     created.setHours(8 + Math.floor(Math.random() * 9), Math.floor(Math.random() * 60));
-    const isClosed = d.statut === 'Résolu' || d.statut === 'Clos';
+    const isClosed = d.statut === 'Résolu';
     const closed = isClosed ? new Date(created.getTime() + (Math.random() * 4 + 0.5) * 86400000) : null;
     return {
       id: i + 1,
