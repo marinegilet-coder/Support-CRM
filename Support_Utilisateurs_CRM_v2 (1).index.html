@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support utilisateurs CRM — Suivi des demandes</title>
+<style>
+  /* ============ CHARTE ARTÉMIS ============ */
+  :root {
+    --navy: #1D3869;
+    --teal: #3C7A89;
+    --red: #FF5A5F;
+    --pink: #E5989B;
+    --light-blue: #A8CCC9;
+    --bg: #F5F7FA;
+    --white: #FFFFFF;
+    --gray-100: #F0F2F5;
+    --gray-200: #E4E7EB;
+    --gray-300: #CBD2D9;
+    --gray-500: #7B8794;
+    --gray-700: #3E4C59;
+    --green: #2E8B57;
+    --orange: #C0623A;
+    --purple: #7B5EA7;
+    --shadow: 0 2px 8px rgba(29, 56, 105, 0.08);
+    --shadow-lg: 0 8px 24px rgba(29, 56, 105, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Calibri', 'Arial', sans-serif;
+    background: var(--bg);
+    color: var(--gray-700);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ============ HEADER ============ */
+  .header {
+    background: var(--navy);
+    color: var(--white);
+    padding: 16px 24px;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-title h1 {
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+  }
+  .header-title p {
+    font-size: 12px;
+    color: var(--light-blue);
+    margin-top: 2px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ============ BOUTONS ============ */
+  .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--red); color: var(--white); }
+  .btn-primary:hover { background: #E54B50; transform: translateY(-1px); }
+  .btn-secondary { background: var(--white); color: var(--navy); border: 1px solid var(--gray-300); }
+  .btn-secondary:hover { background: var(--gray-100); }
+  .btn-ghost { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.3); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+  .btn-icon {
+    padding: 6px 10px;
+    background: transparent;
+    border: none;
+    color: var(--gray-500);
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .btn-icon:hover { background: var(--gray-200); color: var(--navy); }
+
+  /* ============ NAVIGATION ============ */
+  .nav {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 24px;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .nav-tab {
+    padding: 14px 20px;
+    cursor: pointer;
+    color: var(--gray-500);
+    font-weight: 600;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    font-size: 14px;
+  }
+  .nav-tab:hover { color: var(--navy); }
+  .nav-tab.active {
+    color: var(--navy);
+    border-bottom-color: var(--red);
+  }
+
+  /* ============ CONTENU ============ */
+  .content {
+    padding: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ============ KPI CARDS ============ */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--teal);
+  }
+  .kpi-card.urgent { border-left-color: var(--red); }
+  .kpi-card.warning { border-left-color: var(--orange); }
+  .kpi-card.success { border-left-color: var(--green); }
+  .kpi-card.info { border-left-color: var(--navy); }
+  .kpi-label {
+    font-size: 11px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  .kpi-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--navy);
+    margin: 6px 0 4px;
+  }
+  .kpi-sub {
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+
+  /* ============ SECTIONS DASHBOARD ============ */
+  .section-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 1024px) {
+    .section-grid { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .panel-title {
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--navy);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ============ CHARTS ============ */
+  .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+  .bar-item { display: flex; flex-direction: column; gap: 4px; }
+  .bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .bar-track {
+    height: 20px;
+    background: var(--gray-100);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--navy);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .bar-fill.teal { background: var(--teal); }
+  .bar-fill.red { background: var(--red); }
+  .bar-fill.pink { background: var(--pink); }
+  .bar-fill.light { background: var(--light-blue); color: var(--navy); }
+  .bar-fill.green { background: var(--green); }
+  .bar-fill.orange { background: var(--orange); }
+  .bar-fill.purple { background: var(--purple); }
+
+  /* ============ TABLE ============ */
+  .table-wrapper {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .table-toolbar {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: var(--teal);
+  }
+  .filter-select {
+    padding: 8px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    background: white;
+    cursor: pointer;
+  }
+  .table-container {
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead {
+    background: var(--gray-100);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--navy);
+    border-bottom: 2px solid var(--gray-200);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { background: var(--gray-200); }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: middle;
+  }
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: var(--gray-100); }
+
+  /* ============ BADGES ============ */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .badge-bug { background: #FFE5E6; color: var(--red); }
+  .badge-question { background: #E5F0FF; color: var(--navy); }
+  .badge-evolution { background: #E8F5E8; color: var(--green); }
+  .badge-acces { background: #FFE8D6; color: var(--orange); }
+  .badge-donnee { background: #F0E5F5; color: var(--purple); }
+  .badge-albr { background: #FFE5E6; color: var(--red); }
+  .badge-bewai { background: #E8F0EF; color: var(--teal); }
+  .badge-cifacil { background: #E5F0FF; color: var(--navy); }
+  .badge-transverse { background: var(--gray-200); color: var(--gray-700); }
+  .badge-bloquant { background: var(--red); color: white; }
+  .badge-genant { background: var(--orange); color: white; }
+  .badge-mineur { background: var(--gray-300); color: var(--gray-700); }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .status-pill::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .status-nouveau { background: #FFE5E6; color: var(--red); }
+  .status-nouveau::before { background: var(--red); }
+  .status-encours { background: #FFF4E5; color: var(--orange); }
+  .status-encours::before { background: var(--orange); }
+  .status-jira { background: #E5F0FF; color: var(--navy); }
+  .status-jira::before { background: var(--navy); }
+  .status-resolu { background: #E8F5E8; color: var(--green); }
+  .status-resolu::before { background: var(--green); }
+  .status-clos { background: var(--gray-200); color: var(--gray-500); }
+  .status-clos::before { background: var(--gray-500); }
+
+  /* ============ MODAL ============ */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(29, 56, 105, 0.5);
+    z-index: 100;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    overflow-y: auto;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 720px;
+    box-shadow: var(--shadow-lg);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    padding: 18px 24px;
+    background: var(--navy);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-header h2 { font-size: 17px; }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .modal-body { padding: 24px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    background: var(--gray-100);
+    border-radius: 0 0 12px 12px;
+  }
+
+  /* ============ FORMULAIRE ============ */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .form-row-full { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .form-label .required { color: var(--red); }
+  .form-input, .form-select, .form-textarea {
+    padding: 9px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    background: var(--white);
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(60, 122, 137, 0.15);
+  }
+  .form-textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+  }
+  .info-box {
+    background: #E5F0FF;
+    border-left: 3px solid var(--navy);
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--navy);
+    margin-bottom: 14px;
+  }
+  .auto-filled {
+    background: var(--gray-100);
+    color: var(--gray-500);
+    font-style: italic;
+  }
+
+  /* ============ DETAIL VIEW ============ */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 24px;
+    margin-bottom: 16px;
+  }
+  .detail-item .detail-label {
+    font-size: 11px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .detail-item .detail-value {
+    font-size: 14px;
+    color: var(--gray-700);
+  }
+  .description-box {
+    background: var(--gray-100);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 16px;
+    white-space: pre-wrap;
+    font-size: 13px;
+  }
+  .timeline {
+    border-left: 2px solid var(--gray-200);
+    padding-left: 16px;
+    margin-bottom: 16px;
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    background: var(--teal);
+    border-radius: 50%;
+    border: 2px solid white;
+  }
+  .timeline-date { color: var(--gray-500); font-size: 11px; }
+  .timeline-text { color: var(--gray-700); margin-top: 2px; }
+
+  /* ============ FILE IMPORT ============ */
+  .file-input-hidden { display: none; }
+
+  /* ============ HEATMAP RÉGIONS ============ */
+  .heatmap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+  }
+  .heatmap-cell {
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+  }
+  .heatmap-region { font-size: 11px; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.3px; }
+  .heatmap-count { font-size: 22px; margin-top: 4px; }
+  .heatmap-sub { font-size: 10px; opacity: 0.85; margin-top: 2px; }
+
+  /* ============ INDICATEUR DE SYNCHRONISATION ============ */
+  .sync-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    font-size: 11px;
+    color: #fff;
+    cursor: default;
+  }
+  .sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #FFA500;
+    box-shadow: 0 0 6px rgba(255,165,0,0.6);
+    animation: pulse 1.5s infinite;
+  }
+  .sync-indicator.ok .sync-dot {
+    background: #2E8B57;
+    box-shadow: 0 0 6px rgba(46,139,87,0.6);
+    animation: none;
+  }
+  .sync-indicator.error .sync-dot {
+    background: var(--red);
+    box-shadow: 0 0 6px rgba(255,90,95,0.6);
+    animation: pulse-fast 0.8s infinite;
+  }
+  .sync-indicator.syncing .sync-dot {
+    background: #A8CCC9;
+    box-shadow: 0 0 6px rgba(168,204,201,0.6);
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes pulse-fast {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ============ TOAST ============ */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .toast.success { background: var(--green); }
+  .toast.error { background: var(--red); }
+  .toast.info { background: var(--navy); }
+
+  /* ============ EMPTY STATE ============ */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-500);
+  }
+  .empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  .empty-state-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+  }
+
+  /* ============ PROCESS FLOW VIEW ============ */
+  .process-card {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .process-step {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .process-step:last-child { border-bottom: none; }
+  .process-step-num {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 15px;
+  }
+  .process-step.step-1 .process-step-num { background: var(--green); }
+  .process-step.step-2 .process-step-num { background: #DAA520; }
+  .process-step.step-3 .process-step-num { background: var(--orange); }
+  .process-step.step-4 .process-step-num { background: var(--red); }
+  .process-step-content { flex: 1; }
+  .process-step-title {
+    font-weight: bold;
+    color: var(--navy);
+    margin-bottom: 4px;
+    font-size: 15px;
+  }
+  .process-step-desc {
+    color: var(--gray-700);
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .process-step-detail {
+    background: var(--gray-100);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+  .process-step-detail ul { margin-left: 18px; }
+  .process-step-detail li { margin-bottom: 2px; }
+
+  /* ============ HELPERS ============ */
+  .text-small { font-size: 11px; color: var(--gray-500); }
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-top: 10px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<div class="header">
+  <div class="header-title">
+    <h1>🎯 Support utilisateurs CRM albR / Bewai / Cifacil</h1>
+    <p>Outil de suivi des demandes — Chloé / DOT &middot; <span style="color: #A8CCC9;">🔗 Connecté au Google Sheet</span></p>
+  </div>
+  <div class="header-actions">
+    <div id="sync-indicator" class="sync-indicator" title="État de connexion au Google Sheet">
+      <span class="sync-dot"></span>
+      <span class="sync-label">Chargement...</span>
+    </div>
+    <button class="btn btn-primary" onclick="openTicketModal()">＋ Nouveau ticket</button>
+    <button class="btn btn-ghost" onclick="refreshFromBackend()" title="Récupérer les dernières données du Google Sheet">🔄 Rafraîchir</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">📥 Importer</button>
+    <button class="btn btn-ghost" onclick="exportJSON()">💾 Exporter JSON</button>
+    <button class="btn btn-ghost" onclick="exportCSV()">📊 Exporter CSV</button>
+    <input type="file" id="importFile" class="file-input-hidden" accept=".json" onchange="importJSON(event)">
+  </div>
+</div>
+
+<!-- ============ NAVIGATION ============ -->
+<nav class="nav">
+  <div class="nav-tab active" onclick="switchView('dashboard', this)">📊 Tableau de bord</div>
+  <div class="nav-tab" onclick="switchView('tickets', this)">📋 Tickets</div>
+  <div class="nav-tab" onclick="switchView('process', this)">📖 Process Chloé</div>
+  <div class="nav-tab" onclick="switchView('settings', this)">⚙️ Paramètres</div>
+</nav>
+
+<!-- ============ CONTENU ============ -->
+<div class="content">
+
+  <!-- ========= DASHBOARD ========= -->
+  <div id="view-dashboard" class="view active">
+
+    <!-- KPI -->
+    <div class="kpi-grid">
+      <div class="kpi-card urgent">
+        <div class="kpi-label">🔴 Tickets ouverts</div>
+        <div class="kpi-value" id="kpi-open">0</div>
+        <div class="kpi-sub" id="kpi-open-sub">À traiter</div>
+      </div>
+      <div class="kpi-card warning">
+        <div class="kpi-label">🟠 En attente dev</div>
+        <div class="kpi-value" id="kpi-jira">0</div>
+        <div class="kpi-sub">Escaladés JIRA</div>
+      </div>
+      <div class="kpi-card success">
+        <div class="kpi-label">✅ Résolus (30j)</div>
+        <div class="kpi-value" id="kpi-resolved">0</div>
+        <div class="kpi-sub" id="kpi-resolved-sub">—</div>
+      </div>
+      <div class="kpi-card info">
+        <div class="kpi-label">⏱️ Délai moyen résolution</div>
+        <div class="kpi-value" id="kpi-avgtime">—</div>
+        <div class="kpi-sub">jours</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">🎯 Taux résolution N1</div>
+        <div class="kpi-value" id="kpi-n1rate">—</div>
+        <div class="kpi-sub">Sans escalade dev</div>
+      </div>
+    </div>
+
+    <!-- TOP 5 + RÉPARTITION TYPE -->
+    <div class="section-grid">
+      <div class="panel">
+        <div class="panel-title">Top thématiques (par module + type)</div>
+        <div id="chart-themes" class="bar-chart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Répartition par type</div>
+        <div id="chart-types" class="bar-chart"></div>
+      </div>
+    </div>
+
+    <!-- HEATMAP RÉGIONS -->
+    <div class="panel" style="margin-bottom: 16px;">
+      <div class="panel-title">Heatmap par région — Tickets ouverts</div>
+      <div id="chart-regions" class="heatmap"></div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-color" style="background: var(--light-blue);"></span>Faible (0-2)</div>
+        <div class="legend-item"><span class="legend-color" style="background: var(--teal);"></span>Modéré (3-7)</div>
+        <div class="legend-item"><span class="legend-color" style="background: var(--orange);"></span>Élevé (8-15)</div>
+        <div class="legend-item"><span class="legend-color" style="background: var(--red);"></span>Critique (16+)</div>
+      </div>
+    </div>
+
+    <!-- PAR VAGUE -->
+    <div class="section-grid">
+      <div class="panel">
+        <div class="panel-title">Répartition par vague de déploiement</div>
+        <div id="chart-waves" class="bar-chart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Statut des tickets</div>
+        <div id="chart-status" class="bar-chart"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========= TICKETS ========= -->
+  <div id="view-tickets" class="view">
+    <div class="table-wrapper">
+      <div class="table-toolbar">
+        <input type="text" class="search-input" id="search-input" placeholder="🔍 Rechercher (titre, courtier, description...)" oninput="renderTable()">
+        <select class="filter-select" id="filter-status" onchange="renderTable()">
+          <option value="">Tous statuts</option>
+          <option value="Nouveau">Nouveau</option>
+          <option value="En cours">En cours</option>
+          <option value="En attente dev">En attente dev</option>
+          <option value="Résolu">Résolu</option>
+          <option value="Clos">Clos</option>
+        </select>
+        <select class="filter-select" id="filter-module" onchange="renderTable()">
+          <option value="">Tous modules</option>
+          <option value="albR">albR</option>
+          <option value="Bewai">Bewai</option>
+          <option value="Cifacil">Cifacil</option>
+          <option value="Transverse">Transverse</option>
+        </select>
+        <select class="filter-select" id="filter-type" onchange="renderTable()">
+          <option value="">Tous types</option>
+          <option value="Bug">Bug</option>
+          <option value="Question">Question</option>
+          <option value="Évolution">Évolution</option>
+          <option value="Accès">Accès</option>
+          <option value="Donnée">Donnée</option>
+        </select>
+        <select class="filter-select" id="filter-priority" onchange="renderTable()">
+          <option value="">Toutes priorités</option>
+          <option value="Bloquant">🔴 Bloquant</option>
+          <option value="Gênant">🟠 Gênant</option>
+          <option value="Mineur">🟢 Mineur</option>
+        </select>
+        <select class="filter-select" id="filter-region" onchange="renderTable()">
+          <option value="">Toutes régions</option>
+        </select>
+      </div>
+      <div class="table-container">
+        <table id="tickets-table">
+          <thead>
+            <tr>
+              <th onclick="sortBy('id')">N°</th>
+              <th onclick="sortBy('dateCreation')">Date</th>
+              <th onclick="sortBy('courtier')">Courtier</th>
+              <th onclick="sortBy('region')">Région</th>
+              <th onclick="sortBy('vague')">Vague</th>
+              <th onclick="sortBy('module')">Module</th>
+              <th onclick="sortBy('type')">Type</th>
+              <th onclick="sortBy('titre')">Titre</th>
+              <th onclick="sortBy('priorite')">Priorité</th>
+              <th onclick="sortBy('statut')">Statut</th>
+              <th>Délai</th>
+            </tr>
+          </thead>
+          <tbody id="tickets-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= PROCESS ========= -->
+  <div id="view-process" class="view">
+    <div class="process-card">
+      <h2 style="color: var(--navy); margin-bottom: 8px; font-size: 18px;">📖 Process de traitement d'une demande</h2>
+      <p style="color: var(--gray-500); margin-bottom: 16px; font-size: 13px;">Workflow standard à appliquer dès réception d'une demande utilisateur. Temps cible : <strong>3 à 5 min de saisie par ticket</strong>.</p>
+
+      <div class="process-step step-1">
+        <div class="process-step-num">1</div>
+        <div class="process-step-content">
+          <div class="process-step-title">🟢 Réception de la demande (≈ 30 sec)</div>
+          <div class="process-step-desc">La demande arrive par mail. Chloé clique immédiatement sur <strong>"+ Nouveau ticket"</strong>.</div>
+          <div class="process-step-detail">
+            <strong>Canal d'entrée :</strong>
+            <ul>
+              <li>📧 Mail sur <code>Chloe.morio@artemiscourtage.com</code></li>
+            </ul>
+            <strong style="display:block; margin-top:8px;">5 champs à renseigner :</strong>
+            Courtier (auto-complétion) → Type → Module → Titre court → Description (copier-coller du mail OK).<br>
+            <em>Région / Vague / Agence / Date sont auto-remplis depuis le profil courtier.</em>
+          </div>
+        </div>
+      </div>
+
+      <div class="process-step step-2">
+        <div class="process-step-num">2</div>
+        <div class="process-step-content">
+          <div class="process-step-title">🟡 Qualification (≈ 1 min)</div>
+          <div class="process-step-desc">Chloé évalue la priorité et l'action à mener.</div>
+          <div class="process-step-detail">
+            <strong>Grille de priorité :</strong>
+            <ul>
+              <li>🔴 <strong>Bloquant</strong> : empêche un courtier de travailler (impossible de créer un dossier, SSO Bewai KO, perte de données)</li>
+              <li>🟠 <strong>Gênant</strong> : workaround possible mais perte de temps significative</li>
+              <li>🟢 <strong>Mineur</strong> : question d'usage, suggestion, point cosmétique</li>
+            </ul>
+            <strong style="display:block; margin-top:8px;">Décision d'orientation :</strong>
+            <ul>
+              <li>✅ Question simple → réponse directe (FAQ existante)</li>
+              <li>🔧 Bug confirmé → escalade <strong>JIRA Euodia</strong></li>
+              <li>💡 Évolution → backlog produit (à voir avec Marine)</li>
+              <li>📚 Question récurrente (3ème occurrence) → à ajouter en FAQ Lemon Learning</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="process-step step-3">
+        <div class="process-step-num">3</div>
+        <div class="process-step-content">
+          <div class="process-step-title">🟠 Traitement</div>
+          <div class="process-step-desc">Selon l'action retenue à l'étape 2.</div>
+          <div class="process-step-detail">
+            <ul>
+              <li><strong>Réponse directe</strong> : mail au courtier (réponse-type adaptée), ticket → "Résolu"</li>
+              <li><strong>Escalade JIRA</strong> : créer le ticket dev avec lien vers le ticket support, copier le n° JIRA, statut → "En attente dev"</li>
+              <li><strong>FAQ</strong> : flag "À capitaliser", traité en batch le vendredi</li>
+              <li><strong>Évolution</strong> : flag "Backlog produit", point bi-mensuel avec Marine</li>
+            </ul>
+            <strong style="display:block; margin-top:8px;">SLA cibles :</strong>
+            <ul>
+              <li>🔴 Bloquant : réponse < 2h, résolution < 24h</li>
+              <li>🟠 Gênant : réponse < 4h, résolution < 5j</li>
+              <li>🟢 Mineur : réponse < 24h, résolution < 15j</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="process-step step-4">
+        <div class="process-step-num">4</div>
+        <div class="process-step-content">
+          <div class="process-step-title">🔴 Clôture (≈ 30 sec)</div>
+          <div class="process-step-desc">Renseigner la solution et fermer le ticket pour alimenter le tableau de bord.</div>
+          <div class="process-step-detail">
+            <ul>
+              <li>Date de clôture (auto si statut → "Résolu")</li>
+              <li>Solution apportée : 1-2 lignes (utile pour identifier les patterns récurrents)</li>
+              <li>Notification automatique au courtier</li>
+              <li>Si bug résolu par dev : confirmer avec le courtier que ça fonctionne avant clôture</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="process-card">
+      <h2 style="color: var(--navy); margin-bottom: 12px; font-size: 18px;">🪶 Optimisations pour alléger la saisie</h2>
+      <div class="process-step">
+        <div class="process-step-num" style="background: var(--teal);">A</div>
+        <div class="process-step-content">
+          <div class="process-step-title">Templates de tickets récurrents</div>
+          <div class="process-step-desc">Pour les questions ultra-fréquentes (ex : "Comment réinitialiser mon mot de passe", "Pourquoi je ne vois pas mon dossier"), créer des tickets pré-remplis en 1 clic.</div>
+        </div>
+      </div>
+      <div class="process-step">
+        <div class="process-step-num" style="background: var(--teal);">B</div>
+        <div class="process-step-content">
+          <div class="process-step-title">Bibliothèque de réponses-types</div>
+          <div class="process-step-desc">20 réponses copiables qui couvrent ~60% des cas. Personnalisation rapide (nom courtier, contexte) puis envoi.</div>
+        </div>
+      </div>
+      <div class="process-step">
+        <div class="process-step-num" style="background: var(--teal);">C</div>
+        <div class="process-step-content">
+          <div class="process-step-title">Capitalisation hebdomadaire</div>
+          <div class="process-step-desc">Tous les vendredis : passer en revue les questions de la semaine, identifier les 3 plus fréquentes, créer/enrichir les articles Lemon Learning correspondants. Objectif : réduire le volume au fil du temps.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= PARAMÈTRES ========= -->
+  <div id="view-settings" class="view">
+    <div class="panel" style="margin-bottom: 16px;">
+      <div class="panel-title">📁 Gestion des données</div>
+      <p style="margin-bottom: 12px;">Les données sont sauvegardées automatiquement dans le navigateur (localStorage). Tu peux exporter le fichier JSON pour le sauvegarder ailleurs, l'envoyer à un collègue, ou l'importer pour récupérer une version antérieure.</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-secondary" onclick="exportJSON()">💾 Exporter JSON (sauvegarde complète)</button>
+        <button class="btn btn-secondary" onclick="exportCSV()">📊 Exporter CSV (pour Excel)</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 Importer un JSON</button>
+        <button class="btn btn-secondary" onclick="loadDemoData()" style="background: var(--light-blue);">🎲 Charger jeu de démo</button>
+        <button class="btn btn-secondary" onclick="confirmReset()" style="background: #FFE5E6; color: var(--red);">🗑️ Tout effacer</button>
+      </div>
+      <p class="text-small" style="margin-top: 12px;">💡 <strong>Conseil</strong> : exporter le JSON chaque fin de semaine et le stocker sur Google Drive partagé avec Marine, en cas de souci navigateur.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">ℹ️ Référentiels intégrés</div>
+      <p style="margin-bottom: 8px;"><strong>Régions :</strong> IDF, Nord, Bretagne, Centre Loire, Sud-Est, Sud-Ouest</p>
+      <p style="margin-bottom: 8px;"><strong>Vagues :</strong> BÊTA, V1, V2, V3, V4, V5</p>
+      <p style="margin-bottom: 8px;"><strong>Modules :</strong> albR, Bewai, Cifacil, Transverse</p>
+      <p style="margin-bottom: 8px;"><strong>Types :</strong> Bug, Question, Évolution, Accès, Donnée</p>
+      <p style="margin-bottom: 8px;"><strong>Statuts :</strong> Nouveau → En cours → En attente dev → Résolu → Clos</p>
+      <p style="margin-bottom: 8px;"><strong>Priorités :</strong> Bloquant 🔴, Gênant 🟠, Mineur 🟢</p>
+      <p class="text-small" style="margin-top: 10px;">Pour modifier ces référentiels, contacter Marine.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ MODAL TICKET (CREATE / EDIT) ============ -->
+<div class="modal-overlay" id="ticket-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">＋ Nouveau ticket</h2>
+      <button class="modal-close" onclick="closeTicketModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box" id="info-box">
+        💡 <strong>Saisie rapide</strong> — Seuls 5 champs sont obligatoires. Date / Région / Vague / Agence sont auto-remplies.
+      </div>
+      <div class="form-grid">
+
+        <div class="form-group form-row-full">
+          <label class="form-label">Courtier <span class="required">*</span></label>
+          <input type="text" class="form-input" id="f-courtier" placeholder="Nom du courtier ou de l'utilisateur" list="courtiers-list">
+          <datalist id="courtiers-list"></datalist>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Type <span class="required">*</span></label>
+          <select class="form-select" id="f-type" onchange="updatePriorityDefault()">
+            <option value="">— Choisir —</option>
+            <option value="Bug">🐛 Bug / Dysfonctionnement</option>
+            <option value="Question">❓ Question d'usage</option>
+            <option value="Évolution">💡 Évolution / Suggestion</option>
+            <option value="Accès">🔧 Accès / SSO</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Module <span class="required">*</span></label>
+          <select class="form-select" id="f-module">
+            <option value="">— Choisir —</option>
+            <option value="albR">albR — CRM</option>
+            <option value="Bewai">Bewai — IA</option>
+            <option value="Transverse">Transverse</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Région</label>
+          <select class="form-select" id="f-region">
+            <option value="IDF">IDF</option>
+            <option value="Nord">Nord</option>
+            <option value="Bretagne">Bretagne</option>
+            <option value="Centre Loire">Centre Loire</option>
+            <option value="Sud-Est">Sud-Est</option>
+            <option value="Sud-Ouest">Sud-Ouest</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Vague</label>
+          <select class="form-select" id="f-vague">
+            <option value="BÊTA">BÊTA</option>
+            <option value="V1">V1</option>
+            <option value="V2">V2</option>
+            <option value="V3">V3</option>
+            <option value="V4">V4</option>
+            <option value="V5">V5</option>
+          </select>
+        </div>
+
+        <div class="form-group form-row-full">
+          <label class="form-label">Titre du ticket <span class="required">*</span></label>
+          <input type="text" class="form-input" id="f-titre" placeholder="Ex : Impossible de créer un dossier — erreur 500" maxlength="120">
+        </div>
+
+        <div class="form-group form-row-full">
+          <label class="form-label">Description <span class="required">*</span></label>
+          <textarea class="form-textarea" id="f-description" placeholder="Décrire le problème, le contexte, les étapes pour reproduire (vous pouvez coller le mail du courtier)"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Priorité <span class="required">*</span></label>
+          <select class="form-select" id="f-priorite">
+            <option value="Mineur">🟢 Mineur</option>
+            <option value="Gênant">🟠 Gênant</option>
+            <option value="Bloquant">🔴 Bloquant</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select class="form-select" id="f-statut">
+            <option value="Nouveau">Nouveau</option>
+            <option value="En cours">En cours</option>
+            <option value="En attente dev">En attente dev</option>
+            <option value="Résolu">Résolu</option>
+            <option value="Clos">Clos</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">N° ticket JIRA (si escalade)</label>
+          <input type="text" class="form-input" id="f-jira" placeholder="Ex : CRM-1234">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Canal de réception</label>
+          <select class="form-select" id="f-canal">
+            <option value="Mail">📧 Mail</option>
+            <option value="Calendly">📅 Calendly / Visio</option>
+            <option value="Téléphone">📞 Téléphone / Teams</option>
+          </select>
+        </div>
+
+        <div class="form-group form-row-full">
+          <label class="form-label">Solution apportée (à remplir à la clôture)</label>
+          <textarea class="form-textarea" id="f-solution" placeholder="1-2 lignes pour décrire la résolution"></textarea>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTicketModal()">Annuler</button>
+      <button class="btn btn-secondary" onclick="deleteCurrentTicket()" id="btn-delete" style="display:none; background:#FFE5E6; color:var(--red);">🗑️ Supprimer</button>
+      <button class="btn btn-primary" onclick="saveTicket()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOAST ============ -->
+<div id="toast" class="toast"></div>
+
+<script>
+'use strict';
+
+// =====================================================
+// ⚠️ CONFIGURATION : colle ton URL Web App ci-dessous
+// =====================================================
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxibkrW3P4aNVrlc6P6kXZhKzPR-ksx_FprwE_iCsvyxY-p6JqIWDFA_9KKNeK_3tI-/exec";
+
+// Mode dégradé : si SCRIPT_URL n'est pas configurée, on retombe sur localStorage
+const BACKEND_ENABLED = SCRIPT_URL && SCRIPT_URL !== "COLLE_TON_URL_ICI" && SCRIPT_URL.includes("script.google.com");
+
+// =====================================================
+
+// ============ ÉTAT GLOBAL ============
+const STORAGE_KEY = 'artemis_support_tickets_v1';
+let state = {
+  tickets: [],
+  nextId: 1,
+  sortField: 'dateCreation',
+  sortAsc: false,
+  currentEditId: null,
+  isSyncing: false
+};
+
+const REGIONS = ['IDF', 'Nord', 'Bretagne', 'Centre Loire', 'Sud-Est', 'Sud-Ouest'];
+const VAGUES = ['BÊTA', 'V1', 'V2', 'V3', 'V4', 'V5'];
+const VAGUE_COLORS = {
+  'BÊTA': '#FF5A5F', 'V1': '#1D3869', 'V2': '#3C7A89',
+  'V3': '#2E8B57', 'V4': '#C0623A', 'V5': '#7B5EA7'
+};
+
+// =====================================================
+// PERSISTANCE BACKEND (Google Sheet via Apps Script)
+// =====================================================
+
+// Met à jour l'indicateur visuel de connexion
+function updateSyncIndicator(status, label) {
+  const ind = document.getElementById('sync-indicator');
+  if (!ind) return;
+  ind.classList.remove('ok', 'error', 'syncing');
+  if (status) ind.classList.add(status);
+  const labelEl = ind.querySelector('.sync-label');
+  if (labelEl) labelEl.textContent = label;
+}
+
+// Appel HTTP au backend (POST)
+async function callBackend(action, ticket) {
+  if (!BACKEND_ENABLED) {
+    throw new Error('Backend non configuré (SCRIPT_URL manquante)');
+  }
+  const response = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: action, ticket: ticket }),
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+  });
+  const data = await response.json();
+  if (data.status !== 'OK') {
+    throw new Error(data.error || 'Erreur backend inconnue');
+  }
+  return data;
+}
+
+// Lecture de tous les tickets depuis le backend
+async function fetchTicketsFromBackend() {
+  if (!BACKEND_ENABLED) {
+    throw new Error('Backend non configuré');
+  }
+  const response = await fetch(SCRIPT_URL, { method: 'GET' });
+  const data = await response.json();
+  if (data.status !== 'OK') {
+    throw new Error(data.error || 'Erreur lecture backend');
+  }
+  return data.tickets || [];
+}
+
+// Charge l'état au démarrage : backend si dispo, sinon localStorage
+async function loadState() {
+  if (BACKEND_ENABLED) {
+    updateSyncIndicator('syncing', 'Chargement...');
+    try {
+      const tickets = await fetchTicketsFromBackend();
+      // Normalisation : le backend renvoie dateCreation au format ISO, le HTML attend ISO ou null
+      state.tickets = tickets.map(t => ({
+        id: t.id,
+        dateCreation: t.dateCreation || null,
+        dateCloture: t.dateCloture || null,
+        dateMaj: t.derniereModif || t.dateCreation || null,
+        courtier: t.courtier || '',
+        region: t.region || '',
+        vague: t.vague || '',
+        module: t.module || '',
+        type: t.type || '',
+        titre: t.titre || '',
+        description: t.description || '',
+        priorite: t.priorite || '',
+        statut: t.statut || '',
+        jira: t.jira || '',
+        canal: t.canal || '',
+        solution: t.solution || ''
+      }));
+      // Calcul du prochain ID (pour tickets sans ID auto-généré)
+      const numericIds = state.tickets
+        .map(t => typeof t.id === 'string' && t.id.startsWith('TKT-') ? parseInt(t.id.slice(4)) : NaN)
+        .filter(n => !isNaN(n));
+      state.nextId = numericIds.length ? Math.max(...numericIds) + 1 : 1;
+      updateSyncIndicator('ok', '🟢 Connecté');
+      return;
+    } catch (err) {
+      console.error('Erreur backend, fallback localStorage', err);
+      updateSyncIndicator('error', '🔴 Hors-ligne');
+      showToast('Connexion au Google Sheet impossible — mode lecture locale', 'error');
+      // Fallback localStorage en lecture seule
+    }
+  }
+  // Fallback : localStorage
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      state.tickets = data.tickets || [];
+      state.nextId = data.nextId || (state.tickets.length + 1);
+    }
+  } catch (e) {
+    console.error('Erreur chargement localStorage', e);
+  }
+}
+
+// Sauvegarde locale (cache, utile en cas de perte de réseau)
+function saveLocalCache() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      tickets: state.tickets,
+      nextId: state.nextId
+    }));
+  } catch (e) {
+    console.error('Erreur sauvegarde cache local', e);
+  }
+}
+
+// Conservé pour compatibilité avec l'ancien code
+function saveState() {
+  saveLocalCache();
+}
+
+// Bouton "Rafraîchir" : recharge depuis le backend
+async function refreshFromBackend() {
+  if (!BACKEND_ENABLED) {
+    showToast('Mode hors-ligne — pas de backend configuré', 'error');
+    return;
+  }
+  updateSyncIndicator('syncing', 'Actualisation...');
+  try {
+    await loadState();
+    renderTable();
+    renderDashboard();
+    showToast(state.tickets.length + ' tickets actualisés', 'success');
+  } catch (err) {
+    updateSyncIndicator('error', '🔴 Erreur');
+    showToast('Erreur de rafraîchissement : ' + err.message, 'error');
+  }
+}
+
+// ============ TOAST ============
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============ NAVIGATION ============
+function switchView(view, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  el.classList.add('active');
+  if (view === 'dashboard') renderDashboard();
+  if (view === 'tickets') renderTable();
+}
+
+// ============ MODAL TICKET ============
+function openTicketModal(ticketId = null) {
+  state.currentEditId = ticketId;
+  const modal = document.getElementById('ticket-modal');
+  const title = document.getElementById('modal-title');
+  const btnDelete = document.getElementById('btn-delete');
+
+  // Reset
+  ['f-courtier','f-titre','f-description','f-jira','f-solution'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-type').value = '';
+  document.getElementById('f-module').value = '';
+  document.getElementById('f-region').value = 'IDF';
+  document.getElementById('f-vague').value = 'V1';
+  document.getElementById('f-priorite').value = 'Mineur';
+  document.getElementById('f-statut').value = 'Nouveau';
+  document.getElementById('f-canal').value = 'Mail';
+
+  if (ticketId !== null) {
+    const t = state.tickets.find(x => x.id === ticketId);
+    if (t) {
+      title.textContent = '✏️ Ticket #' + t.id;
+      document.getElementById('f-courtier').value = t.courtier || '';
+      document.getElementById('f-type').value = t.type || '';
+      document.getElementById('f-module').value = t.module || '';
+      document.getElementById('f-region').value = t.region || 'IDF';
+      document.getElementById('f-vague').value = t.vague || 'V1';
+      document.getElementById('f-titre').value = t.titre || '';
+      document.getElementById('f-description').value = t.description || '';
+      document.getElementById('f-priorite').value = t.priorite || 'Mineur';
+      document.getElementById('f-statut').value = t.statut || 'Nouveau';
+      document.getElementById('f-jira').value = t.jira || '';
+      document.getElementById('f-canal').value = t.canal || 'Mail';
+      document.getElementById('f-solution').value = t.solution || '';
+      btnDelete.style.display = 'inline-flex';
+    }
+  } else {
+    title.textContent = '＋ Nouveau ticket';
+    btnDelete.style.display = 'none';
+  }
+
+  // Datalist courtiers (auto-complétion à partir des tickets existants)
+  const datalist = document.getElementById('courtiers-list');
+  const uniques = [...new Set(state.tickets.map(t => t.courtier).filter(Boolean))].sort();
+  datalist.innerHTML = uniques.map(c => `<option value="${escapeHtml(c)}">`).join('');
+
+  modal.classList.add('active');
+  setTimeout(() => document.getElementById('f-courtier').focus(), 100);
+}
+function closeTicketModal() {
+  document.getElementById('ticket-modal').classList.remove('active');
+  state.currentEditId = null;
+}
+
+function updatePriorityDefault() {
+  const type = document.getElementById('f-type').value;
+  const prio = document.getElementById('f-priorite');
+  if (type === 'Bug' && !state.currentEditId) prio.value = 'Gênant';
+  if (type === 'Accès' && !state.currentEditId) prio.value = 'Bloquant';
+}
+
+async function saveTicket() {
+  const courtier = document.getElementById('f-courtier').value.trim();
+  const type = document.getElementById('f-type').value;
+  const module = document.getElementById('f-module').value;
+  const titre = document.getElementById('f-titre').value.trim();
+  const description = document.getElementById('f-description').value.trim();
+
+  if (!courtier || !type || !module || !titre || !description) {
+    showToast('Champs obligatoires manquants', 'error');
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const statut = document.getElementById('f-statut').value;
+  const isClosing = (statut === 'Résolu' || statut === 'Clos');
+
+  const ticketData = {
+    courtier,
+    type,
+    module,
+    region: document.getElementById('f-region').value,
+    vague: document.getElementById('f-vague').value,
+    titre,
+    description,
+    priorite: document.getElementById('f-priorite').value,
+    statut,
+    jira: document.getElementById('f-jira').value.trim(),
+    canal: document.getElementById('f-canal').value,
+    solution: document.getElementById('f-solution').value.trim()
+  };
+
+  const isEdit = state.currentEditId !== null;
+  let prev = null;
+
+  if (isEdit) {
+    const idx = state.tickets.findIndex(t => t.id === state.currentEditId);
+    if (idx >= 0) {
+      prev = state.tickets[idx];
+      ticketData.id = prev.id;
+      ticketData.dateCreation = prev.dateCreation;
+      ticketData.dateMaj = now;
+      if (isClosing && !prev.dateCloture) {
+        ticketData.dateCloture = now;
+      } else if (!isClosing) {
+        ticketData.dateCloture = null;
+      } else {
+        ticketData.dateCloture = prev.dateCloture;
+      }
+    }
+  } else {
+    // Création : génère un ID unique
+    ticketData.id = BACKEND_ENABLED ? ('TKT-' + Date.now()) : state.nextId++;
+    ticketData.dateCreation = now;
+    ticketData.dateMaj = now;
+    ticketData.dateCloture = isClosing ? now : null;
+  }
+
+  // Sauvegarde backend si disponible
+  if (BACKEND_ENABLED) {
+    updateSyncIndicator('syncing', 'Sauvegarde...');
+    try {
+      const action = isEdit ? 'update' : 'create';
+      await callBackend(action, ticketData);
+      updateSyncIndicator('ok', '🟢 Connecté');
+    } catch (err) {
+      updateSyncIndicator('error', '🔴 Erreur');
+      showToast('Erreur de sauvegarde : ' + err.message, 'error');
+      return; // On annule la modification locale si le backend a échoué
+    }
+  }
+
+  // Mise à jour de l'état local
+  if (isEdit) {
+    const idx = state.tickets.findIndex(t => t.id === state.currentEditId);
+    if (idx >= 0) {
+      state.tickets[idx] = ticketData;
+      showToast('Ticket #' + ticketData.id + ' mis à jour', 'success');
+    }
+  } else {
+    state.tickets.unshift(ticketData);
+    showToast('Ticket #' + ticketData.id + ' créé', 'success');
+  }
+
+  saveLocalCache();
+  closeTicketModal();
+  renderTable();
+  renderDashboard();
+}
+
+async function deleteCurrentTicket() {
+  if (state.currentEditId === null) return;
+  if (!confirm('Supprimer définitivement le ticket #' + state.currentEditId + ' ?')) return;
+
+  const idToDelete = state.currentEditId;
+
+  // Suppression backend si disponible
+  if (BACKEND_ENABLED) {
+    updateSyncIndicator('syncing', 'Suppression...');
+    try {
+      await callBackend('delete', { id: idToDelete });
+      updateSyncIndicator('ok', '🟢 Connecté');
+    } catch (err) {
+      updateSyncIndicator('error', '🔴 Erreur');
+      showToast('Erreur de suppression : ' + err.message, 'error');
+      return;
+    }
+  }
+
+  state.tickets = state.tickets.filter(t => t.id !== idToDelete);
+  saveLocalCache();
+  closeTicketModal();
+  renderTable();
+  renderDashboard();
+  showToast('Ticket supprimé', 'success');
+}
+
+// ============ TABLE ============
+function getFiltered() {
+  const search = (document.getElementById('search-input').value || '').toLowerCase();
+  const fStatus = document.getElementById('filter-status').value;
+  const fModule = document.getElementById('filter-module').value;
+  const fType = document.getElementById('filter-type').value;
+  const fPrio = document.getElementById('filter-priority').value;
+  const fRegion = document.getElementById('filter-region').value;
+
+  return state.tickets.filter(t => {
+    if (fStatus && t.statut !== fStatus) return false;
+    if (fModule && t.module !== fModule) return false;
+    if (fType && t.type !== fType) return false;
+    if (fPrio && t.priorite !== fPrio) return false;
+    if (fRegion && t.region !== fRegion) return false;
+    if (search) {
+      const hay = [t.titre, t.description, t.courtier, t.solution, t.jira, t.id].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+}
+
+function sortBy(field) {
+  if (state.sortField === field) state.sortAsc = !state.sortAsc;
+  else { state.sortField = field; state.sortAsc = false; }
+  renderTable();
+}
+
+function renderTable() {
+  // Mettre à jour la liste des régions du filtre
+  const fRegionSel = document.getElementById('filter-region');
+  const currentRegion = fRegionSel.value;
+  const allRegions = [...new Set([...REGIONS, ...state.tickets.map(t => t.region).filter(Boolean)])];
+  fRegionSel.innerHTML = '<option value="">Toutes régions</option>' +
+    allRegions.map(r => `<option value="${r}" ${r === currentRegion ? 'selected' : ''}>${r}</option>`).join('');
+
+  let rows = getFiltered();
+  rows.sort((a, b) => {
+    const av = a[state.sortField] || '';
+    const bv = b[state.sortField] || '';
+    if (av < bv) return state.sortAsc ? -1 : 1;
+    if (av > bv) return state.sortAsc ? 1 : -1;
+    return 0;
+  });
+
+  const tbody = document.getElementById('tickets-tbody');
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11" style="padding: 40px; text-align: center; color: var(--gray-500);">
+      ${state.tickets.length === 0 ? '📋 Aucun ticket pour le moment. Cliquer sur <strong>＋ Nouveau ticket</strong> pour démarrer.' : '🔍 Aucun ticket ne correspond aux filtres.'}
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(t => {
+    const delai = computeDelai(t);
+    const idEscaped = String(t.id).replace(/'/g, "\\'");
+    return `<tr onclick="openTicketModal('${idEscaped}')">
+      <td><strong>#${escapeHtml(t.id)}</strong></td>
+      <td>${formatDate(t.dateCreation)}</td>
+      <td>${escapeHtml(t.courtier)}</td>
+      <td>${escapeHtml(t.region || '')}</td>
+      <td>${escapeHtml(t.vague || '')}</td>
+      <td>${moduleBadge(t.module)}</td>
+      <td>${typeBadge(t.type)}</td>
+      <td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(t.titre)}">${escapeHtml(t.titre)}</td>
+      <td>${priorityBadge(t.priorite)}</td>
+      <td>${statusPill(t.statut)}</td>
+      <td>${delai}</td>
+    </tr>`;
+  }).join('');
+}
+
+function computeDelai(t) {
+  if (t.dateCloture) {
+    const d = Math.round((new Date(t.dateCloture) - new Date(t.dateCreation)) / (1000*60*60*24) * 10) / 10;
+    return `<span style="color: var(--green);">${d}j</span>`;
+  }
+  const d = Math.round((new Date() - new Date(t.dateCreation)) / (1000*60*60*24) * 10) / 10;
+  const color = d > 5 ? 'var(--red)' : d > 2 ? 'var(--orange)' : 'var(--gray-500)';
+  return `<span style="color: ${color};">${d}j</span>`;
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+
+function moduleBadge(m) {
+  if (!m) return '';
+  const cls = { 'albR': 'badge-albr', 'Bewai': 'badge-bewai', 'Cifacil': 'badge-cifacil', 'Transverse': 'badge-transverse' };
+  return `<span class="badge ${cls[m] || 'badge-transverse'}">${m}</span>`;
+}
+function typeBadge(t) {
+  if (!t) return '';
+  const cls = { 'Bug': 'badge-bug', 'Question': 'badge-question', 'Évolution': 'badge-evolution', 'Accès': 'badge-acces', 'Donnée': 'badge-donnee' };
+  return `<span class="badge ${cls[t] || ''}">${t}</span>`;
+}
+function priorityBadge(p) {
+  const cls = { 'Bloquant': 'badge-bloquant', 'Gênant': 'badge-genant', 'Mineur': 'badge-mineur' };
+  const icon = { 'Bloquant': '🔴', 'Gênant': '🟠', 'Mineur': '🟢' };
+  return `<span class="badge ${cls[p] || ''}">${icon[p] || ''} ${p}</span>`;
+}
+function statusPill(s) {
+  const cls = { 'Nouveau': 'status-nouveau', 'En cours': 'status-encours', 'En attente dev': 'status-jira', 'Résolu': 'status-resolu', 'Clos': 'status-clos' };
+  return `<span class="status-pill ${cls[s] || ''}">${s}</span>`;
+}
+
+// ============ DASHBOARD ============
+function renderDashboard() {
+  const t = state.tickets;
+  const now = new Date();
+
+  // KPI 1 : ouverts
+  const open = t.filter(x => x.statut === 'Nouveau' || x.statut === 'En cours');
+  document.getElementById('kpi-open').textContent = open.length;
+  const bloquants = open.filter(x => x.priorite === 'Bloquant').length;
+  document.getElementById('kpi-open-sub').textContent = bloquants > 0 ? `${bloquants} bloquant${bloquants > 1 ? 's' : ''} ⚠️` : 'À traiter';
+
+  // KPI 2 : en attente dev
+  document.getElementById('kpi-jira').textContent = t.filter(x => x.statut === 'En attente dev').length;
+
+  // KPI 3 : résolus 30j
+  const d30 = new Date(now); d30.setDate(d30.getDate() - 30);
+  const resolved30 = t.filter(x => (x.statut === 'Résolu' || x.statut === 'Clos') && x.dateCloture && new Date(x.dateCloture) >= d30);
+  document.getElementById('kpi-resolved').textContent = resolved30.length;
+  const d7 = new Date(now); d7.setDate(d7.getDate() - 7);
+  const resolved7 = t.filter(x => (x.statut === 'Résolu' || x.statut === 'Clos') && x.dateCloture && new Date(x.dateCloture) >= d7);
+  document.getElementById('kpi-resolved-sub').textContent = resolved7.length + ' sur 7j';
+
+  // KPI 4 : délai moyen
+  const closed = t.filter(x => x.dateCloture);
+  if (closed.length > 0) {
+    const avg = closed.reduce((s, x) => s + (new Date(x.dateCloture) - new Date(x.dateCreation)), 0) / closed.length / (1000*60*60*24);
+    document.getElementById('kpi-avgtime').textContent = avg.toFixed(1);
+  } else {
+    document.getElementById('kpi-avgtime').textContent = '—';
+  }
+
+  // KPI 5 : taux N1 (résolu sans passage par "En attente dev" = pas de jira)
+  if (closed.length > 0) {
+    const n1 = closed.filter(x => !x.jira).length;
+    document.getElementById('kpi-n1rate').textContent = Math.round(n1 / closed.length * 100) + '%';
+  } else {
+    document.getElementById('kpi-n1rate').textContent = '—';
+  }
+
+  // Top thématiques (Module + Type combo)
+  const themes = {};
+  t.forEach(x => {
+    const key = `${x.module} — ${x.type}`;
+    themes[key] = (themes[key] || 0) + 1;
+  });
+  const themesArr = Object.entries(themes).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const themeMax = themesArr.length > 0 ? themesArr[0][1] : 1;
+  const themeColors = ['', 'teal', 'red', 'pink', 'green', 'orange'];
+  document.getElementById('chart-themes').innerHTML = themesArr.length === 0
+    ? '<div class="empty-state"><div class="empty-state-icon">📭</div><div>Pas encore de données</div></div>'
+    : themesArr.map((e, i) => `
+        <div class="bar-item">
+          <div class="bar-label"><span>${e[0]}</span><span><strong>${e[1]}</strong></span></div>
+          <div class="bar-track"><div class="bar-fill ${themeColors[i]}" style="width: ${e[1] / themeMax * 100}%">${e[1]}</div></div>
+        </div>`).join('');
+
+  // Répartition par type
+  const typeCount = {};
+  t.forEach(x => { typeCount[x.type] = (typeCount[x.type] || 0) + 1; });
+  const typeArr = Object.entries(typeCount).sort((a, b) => b[1] - a[1]);
+  const typeMax = typeArr.length > 0 ? typeArr[0][1] : 1;
+  const typeColors = { 'Bug': 'red', 'Question': '', 'Évolution': 'green', 'Accès': 'orange', 'Donnée': 'purple' };
+  document.getElementById('chart-types').innerHTML = typeArr.length === 0
+    ? '<div class="empty-state"><div class="empty-state-icon">📭</div><div>—</div></div>'
+    : typeArr.map(e => `
+        <div class="bar-item">
+          <div class="bar-label"><span>${e[0]}</span><span><strong>${e[1]}</strong></span></div>
+          <div class="bar-track"><div class="bar-fill ${typeColors[e[0]] || ''}" style="width: ${e[1] / typeMax * 100}%">${e[1]}</div></div>
+        </div>`).join('');
+
+  // Heatmap régions (uniquement tickets ouverts)
+  const regionCount = {};
+  REGIONS.forEach(r => regionCount[r] = 0);
+  open.forEach(x => { if (x.region) regionCount[x.region] = (regionCount[x.region] || 0) + 1; });
+  document.getElementById('chart-regions').innerHTML = REGIONS.map(r => {
+    const c = regionCount[r] || 0;
+    let bg = 'var(--light-blue)';
+    if (c >= 16) bg = 'var(--red)';
+    else if (c >= 8) bg = 'var(--orange)';
+    else if (c >= 3) bg = 'var(--teal)';
+    const totalReg = t.filter(x => x.region === r).length;
+    return `<div class="heatmap-cell" style="background: ${bg};">
+      <div class="heatmap-region">${r}</div>
+      <div class="heatmap-count">${c}</div>
+      <div class="heatmap-sub">${totalReg} total</div>
+    </div>`;
+  }).join('');
+
+  // Par vague
+  const vagueCount = {};
+  VAGUES.forEach(v => vagueCount[v] = 0);
+  t.forEach(x => { if (x.vague) vagueCount[x.vague] = (vagueCount[x.vague] || 0) + 1; });
+  const vagueMax = Math.max(...Object.values(vagueCount), 1);
+  document.getElementById('chart-waves').innerHTML = VAGUES.map(v => `
+    <div class="bar-item">
+      <div class="bar-label"><span><strong>${v}</strong></span><span>${vagueCount[v]}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width: ${vagueCount[v] / vagueMax * 100}%; background: ${VAGUE_COLORS[v]};">${vagueCount[v] > 0 ? vagueCount[v] : ''}</div></div>
+    </div>`).join('');
+
+  // Statut
+  const statutOrder = ['Nouveau', 'En cours', 'En attente dev', 'Résolu', 'Clos'];
+  const statutCount = {};
+  statutOrder.forEach(s => statutCount[s] = 0);
+  t.forEach(x => { if (x.statut) statutCount[x.statut] = (statutCount[x.statut] || 0) + 1; });
+  const statutMax = Math.max(...Object.values(statutCount), 1);
+  const statutColors = { 'Nouveau': 'red', 'En cours': 'orange', 'En attente dev': '', 'Résolu': 'green', 'Clos': 'light' };
+  document.getElementById('chart-status').innerHTML = statutOrder.map(s => `
+    <div class="bar-item">
+      <div class="bar-label"><span>${s}</span><span><strong>${statutCount[s]}</strong></span></div>
+      <div class="bar-track"><div class="bar-fill ${statutColors[s]}" style="width: ${statutCount[s] / statutMax * 100}%">${statutCount[s] > 0 ? statutCount[s] : ''}</div></div>
+    </div>`).join('');
+}
+
+// ============ IMPORT / EXPORT ============
+function exportJSON() {
+  const data = {
+    exportDate: new Date().toISOString(),
+    version: 1,
+    tickets: state.tickets,
+    nextId: state.nextId
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Support_CRM_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Fichier JSON exporté', 'success');
+}
+
+function exportCSV() {
+  if (state.tickets.length === 0) {
+    showToast('Aucun ticket à exporter', 'error');
+    return;
+  }
+  const headers = ['ID', 'Date création', 'Date clôture', 'Courtier', 'Région', 'Vague', 'Module', 'Type', 'Titre', 'Description', 'Priorité', 'Statut', 'N° JIRA', 'Canal', 'Solution'];
+  const rows = state.tickets.map(t => [
+    t.id,
+    formatDate(t.dateCreation),
+    formatDate(t.dateCloture),
+    t.courtier, t.region, t.vague, t.module, t.type,
+    t.titre, (t.description || '').replace(/\n/g, ' '),
+    t.priorite, t.statut, t.jira || '', t.canal || '',
+    (t.solution || '').replace(/\n/g, ' ')
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(';')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Support_CRM_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Fichier CSV exporté', 'success');
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Avertissement en mode backend
+  if (BACKEND_ENABLED) {
+    if (!confirm("⚠️ ATTENTION mode backend Google Sheet\n\nL'import JSON ne synchronise PAS avec le Google Sheet.\nIl ne modifie que ta vue locale (cache navigateur).\n\nPour une vraie restauration de données, utilise directement le Google Sheet ou contacte ton admin.\n\nContinuer l'import en local uniquement ?")) {
+      event.target.value = ''; return;
+    }
+  }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.tickets || !Array.isArray(data.tickets)) {
+        showToast('Fichier invalide', 'error'); return;
+      }
+      if (state.tickets.length > 0) {
+        if (!confirm(`Importer ${data.tickets.length} tickets ?\n\nChoisir :\n• OK = REMPLACER les ${state.tickets.length} tickets existants\n• Annuler = ne rien faire`)) {
+          event.target.value = ''; return;
+        }
+      }
+      state.tickets = data.tickets;
+      state.nextId = data.nextId || (Math.max(...data.tickets.map(t => typeof t.id === 'number' ? t.id : 0), 0) + 1);
+      saveLocalCache();
+      renderTable();
+      renderDashboard();
+      showToast(`${data.tickets.length} tickets importés ${BACKEND_ENABLED ? '(local uniquement)' : ''}`, 'success');
+    } catch (err) {
+      showToast('Erreur de lecture du fichier', 'error');
+      console.error(err);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function confirmReset() {
+  if (state.tickets.length === 0) {
+    showToast('Aucune donnée à effacer', 'info');
+    return;
+  }
+  if (BACKEND_ENABLED) {
+    showToast("Cette action est désactivée en mode backend. Pour supprimer en masse, va directement dans le Google Sheet.", 'error');
+    return;
+  }
+  if (!confirm(`⚠️ Effacer définitivement les ${state.tickets.length} tickets ?\n\nCette action est IRRÉVERSIBLE. Pense à exporter une sauvegarde JSON avant !`)) return;
+  if (!confirm('Êtes-vous absolument sûr·e ?')) return;
+  state.tickets = [];
+  state.nextId = 1;
+  saveLocalCache();
+  renderTable();
+  renderDashboard();
+  showToast('Données effacées', 'success');
+}
+
+// ============ JEU DE DÉMO ============
+function loadDemoData() {
+  if (BACKEND_ENABLED) {
+    showToast("Chargement de démos désactivé en mode backend — utilise un Sheet de test si besoin", 'error');
+    return;
+  }
+  if (state.tickets.length > 0) {
+    if (!confirm('Cela va remplacer tes tickets actuels par un jeu de démo. Continuer ?')) return;
+  }
+  const demos = [
+    { courtier: 'Alexandre Dubois', region: 'Bretagne', vague: 'BÊTA', module: 'albR', type: 'Bug', titre: 'Impossible de créer un dossier — erreur 500', description: 'Quand je clique sur "Créer un dossier" depuis la fiche client, j\'ai une erreur 500. Reproductible sur 3 clients différents.', priorite: 'Bloquant', statut: 'En attente dev', jira: 'CRM-1234', canal: 'Téléphone', solution: '' },
+    { courtier: 'Lindsay Martin', region: 'Bretagne', vague: 'BÊTA', module: 'Bewai', type: 'Question', titre: 'Comment forcer la re-classification d\'un document ?', description: 'Bewai a mal classé un avis d\'imposition en bulletin de salaire. Comment je corrige ?', priorite: 'Mineur', statut: 'Résolu', canal: 'Mail', solution: 'Cliquer sur le doc → bouton "Reclasser" → choisir la bonne catégorie. Article FAQ #12.' },
+    { courtier: 'Célia Bernard', region: 'IDF', vague: 'V1', module: 'albR', type: 'Question', titre: 'Où je trouve mon dashboard ?', description: 'Je vois mes leads mais pas le dashboard global', priorite: 'Mineur', statut: 'Résolu', canal: 'Calendly', solution: 'Cliquer sur le logo albR en haut à gauche pour revenir au dashboard. À ajouter en FAQ.' },
+    { courtier: 'Toni Romano', region: 'IDF', vague: 'V2', module: 'Cifacil', type: 'Bug', titre: 'Synchronisation albR → Cifacil manquante sur dossier 78231', description: 'J\'ai créé un dossier dans albR il y a 2h, je ne le vois pas dans Cifacil', priorite: 'Bloquant', statut: 'En cours', canal: 'Mail', solution: '' },
+    { courtier: 'Olivia Renard', region: 'IDF', vague: 'V1', module: 'Bewai', type: 'Accès', titre: 'SSO Bewai ne fonctionne pas', description: 'Quand je clique "Accès Bewai" depuis albR, page blanche', priorite: 'Bloquant', statut: 'En attente dev', jira: 'CRM-1241', canal: 'Téléphone', solution: '' },
+    { courtier: 'Mathieu Vincent', region: 'Nord', vague: 'V1', module: 'albR', type: 'Évolution', titre: 'Pouvoir trier les leads par date d\'ajout', description: 'Actuellement le tri se fait par nom, ce serait pratique d\'avoir le tri par date', priorite: 'Mineur', statut: 'Nouveau', canal: 'Mail', solution: '' },
+    { courtier: 'Sophie Dubois', region: 'Nord', vague: 'V1', module: 'albR', type: 'Bug', titre: 'Doublons non détectés sur email avec majuscules', description: 'Un même email écrit en MAJ et en min crée deux fiches au lieu d\'alerter sur le doublon', priorite: 'Gênant', statut: 'En attente dev', jira: 'CRM-1238', canal: 'Mail', solution: '' },
+    { courtier: 'Pierre Lacroix', region: 'Centre Loire', vague: 'V2', module: 'Bewai', type: 'Question', titre: 'Quels documents sont reconnus par l\'IA ?', description: 'J\'ai uploadé un acte notarié, l\'IA ne le reconnaît pas', priorite: 'Mineur', statut: 'Résolu', canal: 'Mail', solution: 'Liste des 24 types de docs IA dispo dans la FAQ. Acte notarié = catégorie "Autre"' },
+    { courtier: 'Julie Moreau', region: 'Sud-Est', vague: 'V2', module: 'albR', type: 'Question', titre: 'Comment partager un dossier en pool ?', description: 'Mon manager me dit que je dois mettre un dossier en pool avec un collègue, je trouve pas l\'option', priorite: 'Mineur', statut: 'Résolu', canal: 'Calendly', solution: 'Fiche dossier → bouton "Partager" → choisir le co-courtier. Voir vidéo tuto.' },
+    { courtier: 'Karim Benali', region: 'Sud-Ouest', vague: 'V2', module: 'Cifacil', type: 'Donnée', titre: 'Données manquantes côté Cifacil après synchro', description: 'Le co-emprunteur saisi dans albR n\'apparaît pas dans Cifacil', priorite: 'Bloquant', statut: 'En attente dev', jira: 'CRM-1245', canal: 'Téléphone', solution: '' },
+    { courtier: 'Émilie Petit', region: 'IDF', vague: 'V2', module: 'albR', type: 'Bug', titre: 'Bouton "Valider l\'action" inactif sur Safari', description: 'Sur Safari Mac, le bouton ne réagit pas. OK sur Chrome.', priorite: 'Gênant', statut: 'En cours', canal: 'Mail', solution: '' },
+    { courtier: 'Antoine Caustas', region: 'IDF', vague: 'V2', module: 'albR', type: 'Question', titre: 'Comment réaffecter un lead à un autre courtier ?', description: 'J\'ai un lead qui s\'avère ne pas être pour moi, comment je le passe à un collègue ?', priorite: 'Mineur', statut: 'Résolu', canal: 'Mail', solution: 'Action manager uniquement. Demander à son DA ou DR.' },
+    { courtier: 'Léa Fontaine', region: 'IDF', vague: 'V2', module: 'Bewai', type: 'Bug', titre: 'IA bloquée sur dossier 78415 depuis 3h', description: 'Le statut reste "En cours d\'analyse" alors que les autres dossiers du même jour sont OK', priorite: 'Bloquant', statut: 'Nouveau', canal: 'Téléphone', solution: '' },
+    { courtier: 'Nicolas Peyru', region: 'IDF', vague: 'V2', module: 'albR', type: 'Bug', titre: 'Notification de tâche en double', description: 'Je reçois deux fois la notif pour chaque tâche', priorite: 'Gênant', statut: 'Nouveau', canal: 'Mail', solution: '' },
+    { courtier: 'Vincent Bertaud', region: 'Centre Loire', vague: 'V2', module: 'albR', type: 'Question', titre: 'Différence entre client et prospect ?', description: 'Pas clair sur quand on passe de l\'un à l\'autre', priorite: 'Mineur', statut: 'Résolu', canal: 'Calendly', solution: 'Prospect = lead non transformé. Client = mandat signé. Article FAQ #3.' },
+    { courtier: 'Sarah Khaled', region: 'Sud-Est', vague: 'V2', module: 'Cifacil', type: 'Question', titre: 'Verrouillage dossier en banque — récupérable ?', description: 'J\'ai envoyé un dossier en banque par erreur, je peux le déverrouiller ?', priorite: 'Gênant', statut: 'Résolu', canal: 'Mail', solution: 'Non, dossier verrouillé = archive. Création d\'un nouveau dossier nécessaire.' },
+    { courtier: 'Hugo Lambert', region: 'Sud-Ouest', vague: 'V2', module: 'albR', type: 'Évolution', titre: 'Export Excel du tableau leads', description: 'Pour mes reportings perso ce serait pratique', priorite: 'Mineur', statut: 'Nouveau', canal: 'Mail', solution: '' },
+    { courtier: 'Marine Caron', region: 'Bretagne', vague: 'V1', module: 'albR', type: 'Question', titre: 'Vue 360 client — comment voir les anciens dossiers ?', description: 'J\'ai repris un client d\'un ancien collègue, je veux voir l\'historique', priorite: 'Mineur', statut: 'Résolu', canal: 'Calendly', solution: 'Fiche client → onglet "Audit" → historique des dossiers. Données financières masquées.' },
+    { courtier: 'Olivier Campistron', region: 'Bretagne', vague: 'V1', module: 'Transverse', type: 'Évolution', titre: 'Module DR — vue agrégée par région', description: 'En tant que DR, j\'aimerais voir le dashboard de toute ma région', priorite: 'Gênant', statut: 'En cours', canal: 'Téléphone', solution: '' },
+    { courtier: 'Franck Besançon', region: 'Centre Loire', vague: 'V2', module: 'albR', type: 'Accès', titre: 'Pas accès à la console d\'administration', description: 'En tant que DR je devrais voir les courtiers de ma région', priorite: 'Bloquant', statut: 'Résolu', canal: 'Mail', solution: 'Droit ajouté côté admin. À vérifier au prochain login.' }
+  ];
+
+  // Répartir les dates de création sur les 30 derniers jours
+  const now = new Date();
+  state.tickets = demos.map((d, i) => {
+    const daysAgo = Math.floor(Math.random() * 28) + 1;
+    const created = new Date(now);
+    created.setDate(created.getDate() - daysAgo);
+    created.setHours(8 + Math.floor(Math.random() * 9), Math.floor(Math.random() * 60));
+    const isClosed = d.statut === 'Résolu' || d.statut === 'Clos';
+    const closed = isClosed ? new Date(created.getTime() + (Math.random() * 4 + 0.5) * 86400000) : null;
+    return {
+      id: i + 1,
+      ...d,
+      dateCreation: created.toISOString(),
+      dateMaj: (closed || created).toISOString(),
+      dateCloture: closed ? closed.toISOString() : null
+    };
+  });
+  state.nextId = demos.length + 1;
+  saveState();
+  renderTable();
+  renderDashboard();
+  showToast(demos.length + ' tickets de démo chargés', 'success');
+}
+
+// ============ UTILS ============
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded', async () => {
+  // Affiche l'état initial
+  if (!BACKEND_ENABLED) {
+    updateSyncIndicator('error', '🔴 Mode local');
+  }
+
+  // Charge l'état (backend ou localStorage)
+  await loadState();
+  renderTable();
+  renderDashboard();
+
+  // Fermeture modal en cliquant à l'extérieur
+  document.getElementById('ticket-modal').addEventListener('click', e => {
+    if (e.target.id === 'ticket-modal') closeTicketModal();
+  });
+  // Échap pour fermer
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeTicketModal();
+  });
+});
+</script>
+</body>
+</html>
